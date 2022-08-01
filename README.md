@@ -20,6 +20,9 @@ Finally build with the tools of your platform.
 
 # Examples
 tictac.ch8
+
 <img src="https://github.com/wuhoipok/chip8_emu/blob/main/tictac.JPG" alt="tictac" width="512">
+
 blinky.ch8
+
 <img src="https://github.com/wuhoipok/chip8_emu/blob/main/blinky.JPG" alt="blinky" width="512">

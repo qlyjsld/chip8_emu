@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     size_t filesize = f.tellg();
     f.seekg(0);
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init Failed: " << SDL_GetError() << std::endl;
         return 1;
     }
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     SDL_Texture *texture = nullptr;
 
     bool create = SDL_CreateWindowAndRenderer(
-        "chip8_emu", 1280, 640, SDL_WINDOW_OPENGL, &window, &renderer);
+        "chip8_emu", 640, 320, SDL_WINDOW_OPENGL, &window, &renderer);
 
     if (!create) {
         std::cout << "SDL_CreateWindowAndRenderer Failed: " << SDL_GetError()

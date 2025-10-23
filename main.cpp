@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     SDL_Texture *texture = nullptr;
 
     bool create = SDL_CreateWindowAndRenderer(
-        "chip8_emu", 640, 320, SDL_WINDOW_OPENGL, &window, &renderer);
+        "chip8_emu", 800, 400, SDL_WINDOW_OPENGL, &window, &renderer);
 
     if (!create) {
         std::cout << "SDL_CreateWindowAndRenderer Failed: " << SDL_GetError()
@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
 
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA4444,
                                 SDL_TEXTUREACCESS_STREAMING, 64, 32);
+
+    SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
     uint16_t opcode;
     size_t offset = 0;
@@ -113,7 +115,9 @@ int main(int argc, char *argv[])
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
             if (event.type == SDL_EVENT_KEY_DOWN) {
-                if (event.key.key == SDLK_1)
+                if (event.key.key == SDLK_ESCAPE)
+                    running = false;
+                else if (event.key.key == SDLK_1)
                     keypad[0x1] = 0xFF;
                 else if (event.key.key == SDLK_2)
                     keypad[0x2] = 0xFF;

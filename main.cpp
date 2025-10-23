@@ -106,9 +106,12 @@ int main(int argc, char *argv[])
     }
 
     SDL_Event event;
+    bool running = true;
 
-    while (pc < (entry_point + filesize)) {
+    while (pc < (entry_point + filesize) && running) {
         while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_EVENT_QUIT)
+                running = false;
             if (event.type == SDL_EVENT_KEY_DOWN) {
                 if (event.key.key == SDLK_1)
                     keypad[0x1] = 0xFF;

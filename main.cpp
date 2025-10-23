@@ -1,9 +1,10 @@
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <string>
 
-#include <sdl.h>
+#include <SDL3/SDL.h>
 
 #define entry_point 0x200
 
@@ -50,7 +51,9 @@ static uint8_t font[80] = {
 static uint16_t fetch();
 static void exec(uint16_t opcode);
 
+#ifndef NDEBUG
 static std::string disassemble(uint16_t opcode);
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -69,26 +72,26 @@ int main(int argc, char *argv[])
     size_t filesize = f.tellg();
     f.seekg(0);
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "SDL_Init Failed: " << SDL_GetError() << std::endl;
         return 1;
     }
 
-    SDL_Window *window =
-        SDL_CreateWindow("chip8_emu", SDL_WINDOWPOS_UNDEFINED,
-                         SDL_WINDOWPOS_UNDEFINED, 1280, 640, SDL_WINDOW_OPENGL);
+    SDL_Window *window = nullptr;
+    SDL_Renderer *renderer = nullptr;
+    SDL_Texture *texture = nullptr;
 
-    if (window == nullptr) {
-        std::cout << "SDL_CreateWindow Failed: " << SDL_GetError() << std::endl;
+    bool create = SDL_CreateWindowAndRenderer(
+        "chip8_emu", 1280, 640, SDL_WINDOW_OPENGL, &window, &renderer);
+
+    if (!create) {
+        std::cout << "SDL_CreateWindowAndRenderer Failed: " << SDL_GetError()
+                  << std::endl;
         return 1;
     }
 
-    SDL_Surface *surface = SDL_GetWindowSurface(window);
-    SDL_Renderer *renderer =
-        SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    SDL_Texture *texture =
-        SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA4444,
-                          SDL_TEXTUREACCESS_STREAMING, 64, 32);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA4444,
+                                SDL_TEXTUREACCESS_STREAMING, 64, 32);
 
     uint16_t opcode;
     size_t offset = 0;
@@ -106,71 +109,71 @@ int main(int argc, char *argv[])
 
     while (pc < (entry_point + filesize)) {
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.sym == SDLK_1)
+            if (event.type == SDL_EVENT_KEY_DOWN) {
+                if (event.key.key == SDLK_1)
                     keypad[0x1] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_2)
+                else if (event.key.key == SDLK_2)
                     keypad[0x2] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_3)
+                else if (event.key.key == SDLK_3)
                     keypad[0x3] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_4)
+                else if (event.key.key == SDLK_4)
                     keypad[0xC] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_q)
+                else if (event.key.key == SDLK_Q)
                     keypad[0x4] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_w)
+                else if (event.key.key == SDLK_W)
                     keypad[0x5] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_e)
+                else if (event.key.key == SDLK_E)
                     keypad[0x6] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_r)
+                else if (event.key.key == SDLK_R)
                     keypad[0xD] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_a)
+                else if (event.key.key == SDLK_A)
                     keypad[0x7] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_s)
+                else if (event.key.key == SDLK_S)
                     keypad[0x8] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_d)
+                else if (event.key.key == SDLK_D)
                     keypad[0x9] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_f)
+                else if (event.key.key == SDLK_F)
                     keypad[0xE] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_z)
+                else if (event.key.key == SDLK_Z)
                     keypad[0xA] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_x)
+                else if (event.key.key == SDLK_X)
                     keypad[0x0] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_c)
+                else if (event.key.key == SDLK_C)
                     keypad[0xB] = 0xFF;
-                else if (event.key.keysym.sym == SDLK_v)
+                else if (event.key.key == SDLK_V)
                     keypad[0xF] = 0xFF;
-            } else if (event.type == SDL_KEYUP) {
-                if (event.key.keysym.sym == SDLK_1)
+            } else if (event.type == SDL_EVENT_KEY_UP) {
+                if (event.key.key == SDLK_1)
                     keypad[0x1] = 0x0;
-                else if (event.key.keysym.sym == SDLK_2)
+                else if (event.key.key == SDLK_2)
                     keypad[0x2] = 0x0;
-                else if (event.key.keysym.sym == SDLK_3)
+                else if (event.key.key == SDLK_3)
                     keypad[0x3] = 0x0;
-                else if (event.key.keysym.sym == SDLK_4)
+                else if (event.key.key == SDLK_4)
                     keypad[0xC] = 0x0;
-                else if (event.key.keysym.sym == SDLK_q)
+                else if (event.key.key == SDLK_Q)
                     keypad[0x4] = 0x0;
-                else if (event.key.keysym.sym == SDLK_w)
+                else if (event.key.key == SDLK_W)
                     keypad[0x5] = 0x0;
-                else if (event.key.keysym.sym == SDLK_e)
+                else if (event.key.key == SDLK_E)
                     keypad[0x6] = 0x0;
-                else if (event.key.keysym.sym == SDLK_r)
+                else if (event.key.key == SDLK_R)
                     keypad[0xD] = 0x0;
-                else if (event.key.keysym.sym == SDLK_a)
+                else if (event.key.key == SDLK_A)
                     keypad[0x7] = 0x0;
-                else if (event.key.keysym.sym == SDLK_s)
+                else if (event.key.key == SDLK_S)
                     keypad[0x8] = 0x0;
-                else if (event.key.keysym.sym == SDLK_d)
+                else if (event.key.key == SDLK_D)
                     keypad[0x9] = 0x0;
-                else if (event.key.keysym.sym == SDLK_f)
+                else if (event.key.key == SDLK_F)
                     keypad[0xE] = 0x0;
-                else if (event.key.keysym.sym == SDLK_z)
+                else if (event.key.key == SDLK_Z)
                     keypad[0xA] = 0x0;
-                else if (event.key.keysym.sym == SDLK_x)
+                else if (event.key.key == SDLK_X)
                     keypad[0x0] = 0x0;
-                else if (event.key.keysym.sym == SDLK_c)
+                else if (event.key.key == SDLK_C)
                     keypad[0xB] = 0x0;
-                else if (event.key.keysym.sym == SDLK_v)
+                else if (event.key.key == SDLK_V)
                     keypad[0xF] = 0x0;
             }
         }
@@ -182,14 +185,14 @@ int main(int argc, char *argv[])
             sound--;
 
         opcode = fetch();
-#ifdef DEBUG
+#ifndef NDEBUG
         std::cout << std::hex << pc - 0x2 << " " << disassemble(opcode)
                   << std::endl;
 #endif
         exec(opcode);
         SDL_UpdateTexture(texture, NULL, framebuffer, 32 * 4);
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderTexture(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
         SDL_Delay(1);
     }
@@ -283,7 +286,7 @@ void exec(uint16_t opcode)
         }
     }
 
-    if (nibble == 0xe)
+    if (nibble == 0xe) {
         if ((opcode & 0xFF) == 0x9e) {
             if (keypad[v[(opcode & 0xF00) >> 8]] == 0xFF)
                 pc += 0x2;
@@ -291,6 +294,7 @@ void exec(uint16_t opcode)
             if (keypad[v[(opcode & 0xF00) >> 8]] != 0xFF)
                 pc += 0x2;
         }
+    }
 
     if (nibble == 0xf) {
         if ((opcode & 0xF) == 0xa) {
@@ -457,6 +461,7 @@ void exec(uint16_t opcode)
     }
 }
 
+#ifndef NDEBUG
 std::string disassemble(uint16_t opcode)
 {
     opcode = (opcode >> 8) | (opcode << 8); // little-endian to big-endian
@@ -569,3 +574,4 @@ std::string disassemble(uint16_t opcode)
 
     return "undefined";
 }
+#endif
